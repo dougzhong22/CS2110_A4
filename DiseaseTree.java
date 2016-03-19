@@ -130,18 +130,39 @@ public class DiseaseTree {
         // because that may end up doing extra work. This method requires you
         // to find the DiseaseTree whose root is p. Look in this class for an
         // already written method to do this. */
+    	getTree(p).children.add(new DiseaseTree (c));
         
-        return null;
+        return getTree(c);
     }
 
     /** Return the number of persons in this DiseaseTree.
      * Note: If this is a leaf, the size is 1 (just the root) */
     public int size() {
         //TODO 2
-        
-        return -1;
+    	if(this.numberOfChildren()==0)
+    		return 1;
+    	else
+    		return this.size_helper(1);
     }
 
+    /** Recurse through this DiseaseTree to find the number of
+     *  persons in this DiseaseTree. 
+     */
+    private int size_helper(int count)
+    {
+    	//check if we have reached a leaf
+    	if(this.numberOfChildren()==0)
+    		return count;
+    	//otherwise recurse through all of the children and
+    	//increment count for each child visited
+    	else {
+    		for (DiseaseTree dt : children) {
+    			count=dt.size_helper(count)+1;
+    		}
+    	}
+    	return count;
+    }
+    
     /*** Return the depth at which p occurs in this DiseaseTree, or -1
      * if p is not in the DiseaseTree.
      * Note: depthOf(root) is 0.
@@ -154,8 +175,35 @@ public class DiseaseTree {
         // the answer, thus terminating execution of the method.
         // If checking each child recursively doesn't find that p is in the tree,
         // return -1 at the end of the method.
-        
-        return -1;
+        if(p==root)
+        	return 0;
+        else
+        {
+        	//utilize helper function with initial search level set to 0
+        	return this.depthOf_helper(0, p);
+        }
+    	
+    }
+    
+    /** Recurses through the tree with a current level indicator (int level)
+     *  Return level if Person p is found, otherwise return -1
+     */
+    
+    private int depthOf_helper(int level,Person p)
+    {	
+    	int temp;
+    	if(this.getRoot()==p)
+    		return level;
+    	
+    	//recurse through children to find specified Person p
+		for (DiseaseTree dt : children) {
+			temp=dt.depthOf_helper(level+1, p);
+			//temp will always be -1 unless Person p is found
+			if(temp!=-1)
+				return temp;
+		}
+    	
+    	return -1;
     }
 
     /** Return true iff this DiseaseTree contains p. */
@@ -201,8 +249,38 @@ public class DiseaseTree {
         //TODO 4
         // Hint: Use this recursive definition. If d = 0, the answer is 1.
         // If d > 0, the answer is: sum of widths of the children at depth d-1.
-        
-        return -1;
+    	Set<DiseaseTree> chillen= new HashSet<>();
+    	
+    	if(d==0)
+    		return 1;
+    	else
+    		return this.findSetDepth(d, 0, chillen).size();
+    }
+    
+    
+    /** Returns a set of all children at specified depth d
+     *  int n is the dynamic counter variable that gets incremented
+     *  upon each recursive call. int d is the original specified depth 
+     *  and does not change with a recursive call
+     */
+    private Set<DiseaseTree> findSetDepth(int d, int n, Set<DiseaseTree> chillen)
+    {	
+    	//stop searching if depth is reached
+    	if(n>d-1)
+    		return chillen;	
+    	//add children of node at d-1 to chillen
+    	else if(n==d-1){
+    		for (DiseaseTree dt : children) {
+    			chillen.add(new DiseaseTree(dt));
+    		}
+    	}
+    	//recurse through to find proper depth
+    	else if(n<d-1){
+    		for (DiseaseTree dt : children) {
+    			chillen=dt.findSetDepth(d, n+1, chillen);
+    		}
+    	}
+    	return chillen;
     }
 
     /** Return the maximum width of all the widths in this tree, i.e. the
@@ -305,8 +383,23 @@ public class DiseaseTree {
         // LinkedList<Person> is preferred to ArrayList<Person>, because
         // prepend (or its equivalent) may have to be used.
         // Base Case: The root of this DiseaseTree is c. Route is just [c].
+    	
+    	LinkedList<Person> ret= new LinkedList<Person>();
+    	int depth= this.depthOf(c);
+    	
+    	if(depth==-1)
+    		return null; //child not found in this subtree
+    	
+    	if(this.getRoot()==c){
+    		ret.addLast(c);
+    		return ret;
+    	}
+    	else{
+    		ret=(LinkedList<Person>)this.diseaseRouteTo(this.getParent(c));
+    		ret.addLast(c);
+    	}
 
-        return null; //child not found in this subtree
+        return ret;
     }
 
     /** Return the immediate parent of c (null if c is not in this DiseaseTree).
